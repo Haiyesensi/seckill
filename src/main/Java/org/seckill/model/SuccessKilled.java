@@ -2,7 +2,7 @@ package org.seckill.model;
 
 import java.util.Date;
 
-public class SeccessKilled {
+public class SuccessKilled {
 
     private int seckillId;
 
@@ -16,7 +16,7 @@ public class SeccessKilled {
 
     @Override
     public String toString() {
-        return "SeccessKilled{" +
+        return "SuccessKilled{" +
                 "seckillId=" + seckillId +
                 ", userPhone=" + userPhone +
                 ", state=" + state +
