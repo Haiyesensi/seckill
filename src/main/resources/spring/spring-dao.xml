@@ -11,7 +11,7 @@ http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springfr
     <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
         <property name="driverClass" value="${driver}"></property>
         <property name="jdbcUrl" value="${url}"/>
-        <property name="user" value="${username}"/>
+        <property name="user" value="${user}"/>
         <property name="password" value="${password}"/>
 
         <!--c3p0连接池的私有属性-->
@@ -20,7 +20,7 @@ http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springfr
         <!--关闭连接后不自动commit-->
         <property name="autoCommitOnClose" value="false"/>
         <!--获取连接超时时间-->
-        <property name="checkoutTimeout" value="1000"/>
+        <property name="checkoutTimeout" value="10000"/>
         <!--连接失败时重试次数-->
         <property name="acquireRetryAttempts" value="2"/>
     </bean>
