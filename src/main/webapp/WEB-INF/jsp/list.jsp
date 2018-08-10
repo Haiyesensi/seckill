@@ -7,6 +7,7 @@
     <title>商品列表列表页面</title>
     <%@include file="common/head.jsp" %>
 </head>
+
 <body>
 <div class="container">
     <div class="panel panel-default">
@@ -14,7 +15,7 @@
             <h2>商品列表</h2>
         </div>
         <div class="panel-body">
-            <table class="table-hover">
+            <table class="table-hover" width="1108px">
                 <thead>
                 <tr>
                     <th>名称</th>

@@ -1,5 +1,12 @@
 var seckill = {
-    URL: {},
+    URL: {
+        exposer: function (seckillId) {
+            return '/seckill/' + seckillId + '/exposer';
+        },
+        execution: function (seckillId, md5) {
+            return '/seckill/' + seckillId + '/' + md5 + '/execution';
+        }
+    },
     validataPhone: function (phone) {
         if (phone && phone.length == 11 && !isNaN(phone)) {
             return true;
@@ -17,14 +24,43 @@ var seckill = {
                 var format = event.strftime('秒杀倒计时: %D天 %H时 %M分 %S秒');
                 seckillBox.html(format);
             }).on('finish.countdown', function () {
-                seckill.handleSeckill();
+                seckill.handleSeckill(seckillId, seckillBox);
             });
         } else {
-            seckill.handleSeckill();
+            seckill.handleSeckill(seckillId, seckillBox);
         }
     },
-    handleSeckill: function () {
-
+    handleSeckill: function (seckillId, node) {
+        node.hide().html('<button class="btn btn-primary btn-lg" id="killBtn">开始秒杀</button>');
+        $.post(seckill.URL.exposer(seckillId), {}, function (result) {
+            if (result && result['success']) {
+                var exposer = result['data'];
+                if (exposer['exposed']) {
+                    var md5 = exposer['md5'];
+                    var killUrl = seckill.URL.execution(seckillId, md5);
+                    console.log('killUrl: ' + killUrl);
+                    $('#killBtn').one('click', function () {
+                        $(this).addClass('disable');
+                        $.post(killUrl, {}, function (result) {
+                            if (result && result['success']) {
+                                var killResult = result['data'];
+                                var state = killResult['state'];
+                                var stateInfo = killResult['stateInfo'];
+                                node.html('<span class="label label-success">' + stateInfo + '</span>');
+                            }
+                        });
+                    });
+                    node.show();
+                } else {
+                    var now = exposer['now'];
+                    var start = exposer['start'];
+                    var end = exposer['end'];
+                    seckill.countdown(seckillId, now, start, end);
+                }
+            } else {
+                console.log('result: ' + result);
+            }
+        })
     },
     detail: {
         init: function (params) {
