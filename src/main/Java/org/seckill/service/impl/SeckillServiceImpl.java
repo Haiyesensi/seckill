@@ -2,6 +2,7 @@ package org.seckill.service.impl;
 
 import org.seckill.dao.SeckillDao;
 import org.seckill.dao.SuccessKilledDao;
+import org.seckill.dao.cache.RedisDao;
 import org.seckill.enums.SeckillStateEnum;
 import org.seckill.eto.Exposer;
 import org.seckill.eto.SeckillExecution;
@@ -35,6 +36,9 @@ public class SeckillServiceImpl implements SeckillService {
     @Autowired
     private SuccessKilledDao successKilledDao;
 
+    @Autowired
+    private RedisDao redisDao;
+
     @Override
     public List<Seckill> getSeckillList() {
         return seckillDao.queryAll(0, 10);
@@ -47,9 +51,16 @@ public class SeckillServiceImpl implements SeckillService {
 
     @Override
     public Exposer exportSeckillUrl(long seckillId) {
-        Seckill seckill = seckillDao.queryById(seckillId);
+
+        //Redis缓存优化，超时的基础上维护一致性
+        Seckill seckill = redisDao.getseckill(seckillId);
         if (seckill == null) {
-            return new Exposer(false, seckillId);
+            seckill = seckillDao.queryById(seckillId);
+            if (seckill == null) {
+                return new Exposer(false, seckillId);
+            } else {
+                redisDao.putSeckill(seckill);
+            }
         }
         Date startTime = seckill.getStartTime();
         Date endTime = seckill.getEndTime();
@@ -60,7 +71,7 @@ public class SeckillServiceImpl implements SeckillService {
             return new Exposer(false, nowTime.getTime(), startTime.getTime(), endTime.getTime());
         }
 
-        String md5 = md5(seckillId);//TODO: md5计算
+        String md5 = md5(seckillId);
         return new Exposer(true, md5, seckillId);
     }
 
