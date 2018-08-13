@@ -82,16 +82,17 @@ public class SeckillServiceImpl implements SeckillService {
     }
 
 
-    @Override
-    @Transactional
     /**
-     *
      * 使用注解控制事务方法的优点：
      * 1.明确标注事务方法
      * 2.保证事务方法的执行时间尽可能短，将其他网络操作如HTTP请求，RPC等剥离到事务方法外部
      * 3.不是所有的方法都需要事务，如单条的改动或者只读操作
-     *
+     * <p>
+     * <p>
+     * 高并发优化：将insert操作提到update前面，减少行级锁的存在时间
      */
+    @Override
+    @Transactional
     public SeckillExecution excuteSeckill(long seckillId, long userPhone, String md5) throws SeckillException, SeckillClosedException, RepeatKillException {
 
         if (md5 == null || !md5.equals(md5(seckillId))) {
@@ -99,29 +100,30 @@ public class SeckillServiceImpl implements SeckillService {
         }
         //执行秒杀逻辑：减库存 + 记录购买行为
         Date nowTime = new Date();
-        int updateCount = seckillDao.reduceNumber(seckillId, nowTime);
-        if (updateCount <= 0) {
-            //秒杀已经结束：时间或者库存原因
-            //用户只关心是否开始和结束
-            throw new SeckillClosedException("seckill is closed");
-        } else {
-            try {
-                int insertCount = successKilledDao.insertSuccessKilled(seckillId, userPhone);
-                if (insertCount <= 0) {
-                    throw new RepeatKillException("repeated kill");
+        int insertCount = successKilledDao.insertSuccessKilled(seckillId, userPhone);
+        try {
+            if (insertCount <= 0) {
+                throw new RepeatKillException("repeated kill");
+            } else {
+                int updateCount = seckillDao.reduceNumber(seckillId, nowTime);
+                if (updateCount <= 0) {
+                    //秒杀已经结束：时间或者库存原因
+                    //用户只关心是否开始和结束
+                    throw new SeckillClosedException("seckill is closed");
                 } else {
                     SuccessKilled successKilled = successKilledDao.queryByIdWithSeckill(seckillId, userPhone);
                     return new SeckillExecution(seckillId, SeckillStateEnum.SUCCESS, successKilled);
                 }
-            } catch (SeckillClosedException e1) {
-                throw e1;
-            } catch (RepeatKillException e2) {
-                throw e2;
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-                //将所有编译器异常，转换为运行期异常
-                throw new SeckillException("seckill inner error:" + e.getMessage());
             }
+        } catch (SeckillClosedException e1) {
+            throw e1;
+        } catch (RepeatKillException e2) {
+            throw e2;
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            //将所有编译器异常，转换为运行期异常
+            throw new SeckillException("seckill inner error:" + e.getMessage());
         }
     }
 }
+
