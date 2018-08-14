@@ -85,4 +85,22 @@ public class SeckillServiceTest {
          * seckill=Seckill{seckillId=1004, Name='秒杀商品E', Number=498, startTime=Thu Aug 09 10:48:57 CST 2018, endTime=Sat Sep 01 00:00:00 CST 2018, createTime=Thu Aug 09 10:32:27 CST 2018}}}
          */
     }
+
+    @Test
+    public void executionSeckillProcedure() {
+        long seckillId = 1003L;
+        long phone = 28688262312L;
+        Exposer exposer = seckillService.exportSeckillUrl(seckillId);
+        if (exposer.isExposed()) {
+            String md5 = exposer.getMd5();
+            SeckillExecution seckillExecution = seckillService.excuteSeckillProcedure(seckillId, phone, md5);
+            System.out.println(seckillExecution);
+        }
+    }
+    /**
+     * SeckillExecution{seckillId=1003, state=1, stateInfo='秒杀成功',
+     * successKilled=SuccessKilled{seckillId=1003, userPhone=28688262312, state=-1, createTime=Mon Aug 13 16:40:12 CST 2018,
+     * seckill=Seckill{seckillId=1003, Name='商品D', Number=394, startTime=Mon Aug 13 16:40:11 CST 2018, endTime=Fri Aug 31 00:00:00 CST 2018, createTime=Tue Jul 31 14:38:38 CST 2018}}}
+     */
+
 }
